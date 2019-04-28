@@ -38,8 +38,28 @@ app.get('/info', (req, res) => {
               </html>`);
 });
 
-app.get('/api/persons', (req, resp) => {
+app.get('/api/persons', (req, res) => {
     console.log(`/api/persons called`);
+    res.json(persons);
+});
+
+app.get('/api/persons/:id', (req, res) => {
+    const id = Number(req.params.id);
+    console.log(`/api/persons/${id} called`);
+
+    const person = persons.find(p => p.id === id);
+
+    if(person) {
+        res.json(person);
+    } else {
+        res.status(404).json(
+            {
+                error: `Henkilöä id: ${id} ei löydy`
+            }
+        );
+    }
+
+
     resp.send(persons);
 });
 
