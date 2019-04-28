@@ -45,7 +45,7 @@ app.get('/api/persons', (req, res) => {
 
 app.get('/api/persons/:id', (req, res) => {
     const id = Number(req.params.id);
-    console.log(`/api/persons/${id} called`);
+    console.log(`GET /api/persons/${id} called`);
 
     const person = persons.find(p => p.id === id);
 
@@ -59,8 +59,16 @@ app.get('/api/persons/:id', (req, res) => {
         );
     }
 
-
     resp.send(persons);
+});
+
+app.delete('/api/persons/:id', (req, res) => {
+    const id = Number(req.params.id);
+    console.log(`DELETE /api/persons/${id} called`);
+
+    persons = persons.filter(p => p.id !== id);
+
+    res.status(204).end();
 });
 
 app.listen(PORT, () => {
