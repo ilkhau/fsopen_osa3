@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
+const morgan = require('morgan');
 
 const PORT = 3001;
 
@@ -27,16 +28,22 @@ let persons = [
     }
 ];
 
-const requestLogger = (req, res, next) => {
-    console.log('Method:', req.method);
-    console.log('Path:  ', req.path);
-    console.log('Body:  ', req.body);
-    console.log('---');
-    next()
-};
-
 app.use(bodyParser.json());
-app.use(requestLogger);
+
+morgan.token('body', function (req, res) { return JSON.stringify(req.body); });
+
+app.use(morgan(function (tokens, req, res) {
+    return [
+        tokens.method(req, res),
+        tokens.url(req, res),
+        tokens.status(req, res),
+        tokens.res(req, res, 'content-length'), '-',
+        tokens['response-time'](req, res), 'ms',
+        tokens['body'](req,res)
+    ].join(' ')
+}));
+
+// app.use(morgan('tiny'));
 
 app.get('/info', (req, res) => {
     const now = new Date();
@@ -53,7 +60,6 @@ app.get('/info', (req, res) => {
 const newId = () => Math.floor(Math.random() * Math.floor(100000));
 
 app.post('/api/persons', (req, res) => {
-    console.log(`POST /api/persons called`);
 
     const content = req.body;
 
