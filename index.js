@@ -35,8 +35,8 @@ const requestLogger = (req, res, next) => {
     next()
 };
 
-app.use(requestLogger);
 app.use(bodyParser.json());
+app.use(requestLogger);
 
 app.get('/info', (req, res) => {
     const now = new Date();
@@ -57,9 +57,15 @@ app.post('/api/persons', (req, res) => {
 
     const content = req.body;
 
-    if (!content) {
+    if (!content || !content.name || !content.number) {
         return res.status(400).json({
             error: 'Content missing'
+        });
+    }
+
+    if(persons.some(p => p.name === content.name)) {
+        return res.status(400).json({
+            error: 'name must be unique'
         });
     }
 
