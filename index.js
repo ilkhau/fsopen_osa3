@@ -26,6 +26,18 @@ let persons = [
     }
 ];
 
+app.get('/info', (req, res) => {
+    const now = new Date();
+
+    res.setHeader("Content-Type", "text/html");
+    res.send(`<html>
+                <body>
+                    <p>Puhelinluettelossa on ${persons.length} henkilön tiedot</p>
+                    <p>${now}</p>
+                </body>
+              </html>`);
+});
+
 app.get('/api/persons', (req, resp) => {
     console.log(`/api/persons called`);
     resp.send(persons);
