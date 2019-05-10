@@ -28,6 +28,7 @@ let persons = [
 ];
 
 app.use(cors());
+app.use(express.static('public'));
 app.use(bodyParser.json());
 
 morgan.token('body', function (req, res) { return JSON.stringify(req.body); });
@@ -42,8 +43,6 @@ app.use(morgan(function (tokens, req, res) {
         tokens['body'](req,res)
     ].join(' ')
 }));
-
-// app.use(morgan('tiny'));
 
 app.get('/info', (req, res) => {
     const now = new Date();
