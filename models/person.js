@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+mongoose.set('useFindAndModify', false);
 
 const mongoUrl =  process.env.MONGO_CONNECTION_STRING;
 

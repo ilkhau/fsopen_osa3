@@ -78,7 +78,8 @@ app.get('/api/persons', (req, res, next) => {
 });
 
 app.get('/api/persons/:id', (req, res, next) => {
-    Person.findById(req.params.id)
+
+    Person.findOne( {_id: req.params.id})
         .then(p => {
             if (p) {
                 res.send(p.toJSON());
@@ -94,6 +95,34 @@ app.delete('/api/persons/:id', (req, res) => {
         .then(() => {
             res.status(204).end();
         });
+});
+
+app.put('/api/persons/:id', (req, res, next) => {
+
+    const content = req.body;
+
+    if (!content || !content.name || !content.number) {
+        return res.status(400).json({
+            error: 'Content missing'
+        });
+    }
+
+    const updatedPerson = {
+        name: content.name,
+        number: content.number
+    };
+
+    Person.findOneAndUpdate({_id: req.params.id}, updatedPerson, {
+        new: true
+    }).then(p => {
+        if (p) {
+            console.log(`Person updated ${p}`);
+            res.json(p.toJSON());
+        } else {
+            console.log(`Tried to update non-existent person, id: ${req.params.id}`)
+            res.status(404).end();
+        }
+    }).catch(err => next(err));
 });
 
 const unknownEndpoint = (req, res) => {
