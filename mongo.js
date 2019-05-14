@@ -7,20 +7,20 @@ const personSchema = new mongoose.Schema({
 
 const Person = mongoose.model('Person', personSchema);
 
-const addPerson = function(name, number) {
+const addPerson = function (name, number) {
 
     const person = new Person({
         name: name,
         number: number
     });
 
-    person.save().then( res => {
+    person.save().then(res => {
         console.log(`lisätään ${person.name} numero ${person.number} luetteloon`);
         mongoose.connection.close();
     });
 };
 
-const printPersons = function() {
+const printPersons = function () {
 
     console.log("Puhelinluettelo");
 
@@ -34,19 +34,24 @@ const printPersons = function() {
 };
 
 const args = process.argv.slice(2);
-console.log(args);
+
 if (!args.length) {
     console.log(`password is missing`);
     process.exit(2);
 }
 
 const pwd = args[0];
+
 const connectionString =
-    `mongodb+srv://ilkka-mooc:${pwd}@ilkka-mooc-cluster-0-5ynuk.mongodb.net/puhelinluettelo?retryWrites=true`;
+    `mongodb://dev:${pwd}@localhost/puhelinluettelo?retryWrites=true`;
 
+console.log(`${connectionString}`);
 
-mongoose.connect(connectionString, {useNewUrlParser: true});
-
+mongoose.connect(connectionString, {useNewUrlParser: true})
+    .catch(err => {
+        console.log(`Cannot connect to database: ${err.message}`);
+        process.exit(3);
+    });
 
 if (args.length >= 3) {
     addPerson(args[1], args[2]);

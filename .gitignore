@@ -63,3 +63,6 @@ typings/
 #Webstorm
 .idea/**/*
 package-lock.json
+
+.env
+

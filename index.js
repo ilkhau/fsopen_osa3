@@ -1,37 +1,21 @@
+const dotenv = require('dotenv');
+dotenv.config();
+
 const express = require('express');
 const app = express();
+
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const cors = require('cors');
-
-let persons = [
-    {
-        "name": "Arto Hellas",
-        "number": "040-123456",
-        "id": 1
-    },
-    {
-        "name": "Martti Tienari",
-        "number": "040-123456",
-        "id": 2
-    },
-    {
-        "name": "Arto Järvinen",
-        "number": "040-123456",
-        "id": 3
-    },
-    {
-        "name": "Lea Kutvonen",
-        "number": "040-123456",
-        "id": 4
-    }
-];
+const Person = require('./models/person');
 
 app.use(cors());
 app.use(express.static('public'));
 app.use(bodyParser.json());
 
-morgan.token('body', function (req, res) { return JSON.stringify(req.body); });
+morgan.token('body', function (req, res) {
+    return JSON.stringify(req.body);
+});
 
 app.use(morgan(function (tokens, req, res) {
     return [
@@ -40,23 +24,25 @@ app.use(morgan(function (tokens, req, res) {
         tokens.status(req, res),
         tokens.res(req, res, 'content-length'), '-',
         tokens['response-time'](req, res), 'ms',
-        tokens['body'](req,res)
+        tokens['body'](req, res)
     ].join(' ')
 }));
 
 app.get('/info', (req, res) => {
     const now = new Date();
 
-    res.setHeader("Content-Type", "text/html");
-    res.send(`<html>
+    const count = Person.find({}).then(persons => {
+
+        res.setHeader("Content-Type", "text/html");
+        res.send(`<html>
                 <body>
                     <p>Puhelinluettelossa on ${persons.length} henkilön tiedot</p>
                     <p>${now}</p>
                 </body>
               </html>`);
-});
+    });
 
-const newId = () => Math.floor(Math.random() * Math.floor(100000));
+});
 
 app.post('/api/persons', (req, res) => {
 
@@ -68,56 +54,55 @@ app.post('/api/persons', (req, res) => {
         });
     }
 
-    if(persons.some(p => p.name === content.name)) {
-        return res.status(400).json({
-            error: 'name must be unique'
-        });
-    }
-
-    const person = {
+    const person = new Person({
         name: content.name,
         number: content.number,
-        id: newId()
-    };
+    });
 
-    persons = persons.concat(person);
-
-    res.json(person);
+    person.save()
+        .then(p => {
+            res.json(p.toJSON());
+        })
+        .catch(err => {
+            res.status(422).json({
+                error: 'Cannot add person'
+            });
+        });
 
 });
 
 app.get('/api/persons', (req, res) => {
-    res.json(persons);
+    Person.find({})
+        .then(persons => {
+            res.json(persons);
+        })
+        .catch(err => {
+            res.status(422).json({
+                error: 'Cannot retrieve persons from database'
+            });
+        });
 });
 
 app.get('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id);
-
-    const person = persons.find(p => p.id === id);
-
-    if(person) {
-        res.json(person);
-    } else {
-        res.status(404).json(
-            {
-                error: `Henkilöä id: ${id} ei löydy`
-            }
-        );
-    }
-
-    resp.send(persons);
+    Person.findById(req.params.id)
+        .then(p => res.send(p.toJSON()))
+        .catch(err => {
+            res.status(401).json({
+                error: `Not found person with id: ${req.params.id}`
+            });
+        });
 });
 
 app.delete('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id);
 
-    persons = persons.filter(p => p.id !== id);
-
-    res.status(204).end();
+    Person.findByIdAndDelete(req.params.id)
+        .then(() => {
+            res.status(204).end();
+        });
 });
 
 const unknownEndpoint = (req, res) => {
-    res.status(404).send({ error: 'unknown endpoint' })
+    res.status(404).send({error: 'unknown endpoint'})
 };
 
 app.use(unknownEndpoint);
