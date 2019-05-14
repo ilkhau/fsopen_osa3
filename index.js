@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const cors = require('cors');
 const Person = require('./models/person');
+const mongoErrorHandler = require('./services/mw/errorhandler');
 
 app.use(cors());
 app.use(express.static('public'));
@@ -44,7 +45,7 @@ app.get('/info', (req, res) => {
 
 });
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
 
     const content = req.body;
 
@@ -64,33 +65,27 @@ app.post('/api/persons', (req, res) => {
             res.json(p.toJSON());
         })
         .catch(err => {
-            res.status(422).json({
-                error: 'Cannot add person'
-            });
+            next(error);
         });
-
 });
 
-app.get('/api/persons', (req, res) => {
+app.get('/api/persons', (req, res, next) => {
     Person.find({})
         .then(persons => {
             res.json(persons);
         })
-        .catch(err => {
-            res.status(422).json({
-                error: 'Cannot retrieve persons from database'
-            });
-        });
+        .catch(err => next(err));
 });
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
     Person.findById(req.params.id)
-        .then(p => res.send(p.toJSON()))
-        .catch(err => {
-            res.status(401).json({
-                error: `Not found person with id: ${req.params.id}`
-            });
-        });
+        .then(p => {
+            if (p) {
+                res.send(p.toJSON());
+            } else {
+                res.status(404).end();
+            }
+        }).catch(err => next(err));
 });
 
 app.delete('/api/persons/:id', (req, res) => {
@@ -106,6 +101,7 @@ const unknownEndpoint = (req, res) => {
 };
 
 app.use(unknownEndpoint);
+app.use(mongoErrorHandler());
 
 const PORT = process.env.PORT || 3001;
 
