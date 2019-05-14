@@ -49,12 +49,6 @@ app.post('/api/persons', (req, res, next) => {
 
     const content = req.body;
 
-    if (!content || !content.name || !content.number) {
-        return res.status(400).json({
-            error: 'Content missing'
-        });
-    }
-
     const person = new Person({
         name: content.name,
         number: content.number,
@@ -64,9 +58,7 @@ app.post('/api/persons', (req, res, next) => {
         .then(p => {
             res.json(p.toJSON());
         })
-        .catch(err => {
-            next(error);
-        });
+        .catch(error => next(error));
 });
 
 app.get('/api/persons', (req, res, next) => {
@@ -100,12 +92,6 @@ app.delete('/api/persons/:id', (req, res) => {
 app.put('/api/persons/:id', (req, res, next) => {
 
     const content = req.body;
-
-    if (!content || !content.name || !content.number) {
-        return res.status(400).json({
-            error: 'Content missing'
-        });
-    }
 
     const updatedPerson = {
         name: content.name,
